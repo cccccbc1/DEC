@@ -8,7 +8,7 @@ from lib.dec import DEC
 from lib.datasets import MNIST
 
 dataset = "mnist"
-repeat = 10
+repeat = 1
 batch_size = 256
 
 for i in range(1, repeat+1):
@@ -28,7 +28,7 @@ for i in range(1, repeat+1):
     sdae.pretrain(train_loader, test_loader, lr=0.1, batch_size=batch_size, 
         num_epochs=300, corrupt=0.2, loss_type="mse")
     sdae.fit(train_loader, test_loader, lr=0.1, num_epochs=500, corrupt=0.2, loss_type="mse")
-    sdae_savepath = ("model/sdae-run-%d.pt" % i)
+    sdae_savepath = ("./model/sdae-run-%d.pt" % i)
     sdae.save_model(sdae_savepath)
 
     # finetune
@@ -43,5 +43,5 @@ for i in range(1, repeat+1):
     dec.load_model(sdae_savepath)
     dec.fit(X, y, lr=0.01, batch_size=256, num_epochs=100, 
         update_interval=1)
-    dec_savepath = ("model/dec-run-%d.pt" % i)
+    dec_savepath = ("./model/dec-run-%d.pt" % i)
     dec.save_model(dec_savepath)

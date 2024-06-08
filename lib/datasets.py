@@ -4,6 +4,8 @@ import errno
 import numpy as np
 import torch
 import torch.utils.data as data
+from torchvision.datasets.mnist import get_int
+
 
 class MNIST(data.Dataset):
     """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
@@ -21,10 +23,10 @@ class MNIST(data.Dataset):
             target and transforms it.
     """
     urls = [
-        'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
+        'file:C:/Users/yoooo/Desktop/DEC/pt-dec/data/MNIST/raw/train-images-idx3-ubyte.gz',
+        'file:C:/Users/yoooo/Desktop/DEC/pt-dec/data/MNIST/raw/train-labels-idx1-ubyte.gz',
+        'file:C:/Users/yoooo/Desktop/DEC/pt-dec/data/MNIST/raw/t10k-images-idx3-ubyte.gz',
+        'file:C:/Users/yoooo/Desktop/DEC/pt-dec/data/MNIST/raw/t10k-labels-idx1-ubyte.gz',
     ]
     raw_folder = 'raw'
     processed_folder = 'processed'
