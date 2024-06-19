@@ -79,6 +79,7 @@ class DEC(nn.Module):
         weight = self.entropy_weight(z)
         # compute q -> NxK
         # size = [n, k] 第n个样本与第k个聚类中心的距离
+        # weight 熵权
         q = 1.0 / (1.0 + torch.sum(((z.unsqueeze(1) - self.mu) * weight.unsqueeze(0).unsqueeze(0)) ** 2, dim=2) / self.alpha)
         q = q ** (self.alpha + 1.0) / 2.0
         q = q / torch.sum(q, dim=1, keepdim=True)
