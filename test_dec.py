@@ -1,5 +1,6 @@
 import sys
 sys.path.append("..")
+
 import torch
 import torch.utils.data
 from torchvision import datasets, transforms
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('--pretrain', type=str, default="", metavar='N',
                     help='number of epochs to train (default: 10)')
     args = parser.parse_args()
-    
+
     # according to the released code, mnist data is multiplied by 0.02
     # 255*0.02 = 5.1. transforms.ToTensor() coverts 255 -> 1.0
     # so add a customized Scale transform to multiple by 5.1
@@ -34,6 +35,6 @@ if __name__ == "__main__":
         encodeLayer=[500,500,2000], activation="relu", dropout=0)
     print(dec)
     dec.load_model(args.pretrain)
-    dec.fit(X, y, lr=args.lr, batch_size=args.batch_size, num_epochs=args.epochs, 
+    dec.fit(X, y, lr=args.lr, batch_size=args.batch_size, num_epochs=args.epochs,
         update_interval=args.update_interval)
     dec.save_model("model/dec.pt")

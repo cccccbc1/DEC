@@ -87,7 +87,7 @@ class IDEC(nn.Module):
         for batch_idx in range(num_batch):
             xbatch = X[batch_idx*batch_size : min((batch_idx+1)*batch_size, num)]
             inputs = Variable(xbatch)
-            z,_, _ = self.forward(inputs)
+            z, _, _ = self.forward(inputs)
             encoded.append(z.data)
 
         encoded = torch.cat(encoded, dim=0)
