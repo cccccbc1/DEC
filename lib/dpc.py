@@ -49,7 +49,7 @@ def density_peak_clustering(data, y, num_centers, dc):
     #     if not cluster_centers[i]:
     #         clusters[i] = clusters[nneigh[i]]
     # 使用 KMeans 分配剩余点
-    kmeans = KMeans(n_clusters=num_centers, init=cluster_centers_pos, n_init=10)
+    kmeans = KMeans(n_clusters=num_centers, init=cluster_centers_pos, n_init=1)
     kmeans.fit(data)
     clusters = kmeans.labels_
     cluster_centers = kmeans.cluster_centers_

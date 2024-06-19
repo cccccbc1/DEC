@@ -56,12 +56,30 @@ class DEC(nn.Module):
         model_dict.update(pretrained_dict)
         self.load_state_dict(model_dict)
 
+    # 熵权法计算权重
+    def entropy_weight(self, matrix):
+        # 转换为 NumPy 数组，方便计算
+        matrix = matrix.data.cpu().numpy()
+        # 计算每个属性的概率分布
+        probs = np.exp(matrix) / np.sum(np.exp(matrix), axis=0)
+        # 避免对0取对数，加上一个微小的值
+        probs += 1e-12
+        # 计算信息熵
+        entropy = -np.sum(probs * np.log(probs), axis=0)
+        # 计算权重
+        max_entropy = np.log(matrix.shape[0])
+        weights = (max_entropy - entropy) / np.sum(max_entropy - entropy)
+        weights = torch.tensor(weights)
+        return weights.to("cuda")
+
     # 向前传播过程  计算qij
     def forward(self, x):
         h = self.encoder(x)
         z = self._enc_mu(h)
+        weight = self.entropy_weight(z)
         # compute q -> NxK
-        q = 1.0 / (1.0 + torch.sum((z.unsqueeze(1) - self.mu) ** 2, dim=2) / self.alpha)
+        # size = [n, k] 第n个样本与第k个聚类中心的距离
+        q = 1.0 / (1.0 + torch.sum(((z.unsqueeze(1) - self.mu) * weight.unsqueeze(0).unsqueeze(0)) ** 2, dim=2) / self.alpha)
         q = q ** (self.alpha + 1.0) / 2.0
         q = q / torch.sum(q, dim=1, keepdim=True)
         return z, q
@@ -123,13 +141,14 @@ class DEC(nn.Module):
         # 优化聚类中心的选取，去除离群点
         data, _ = self.forward(X)
         dc = np.percentile(pairwise_distances(data.data.cpu().numpy()), 2)
-        data, y, y_pred, _, cluster_centers_pos, _, _, outliers = density_peak_clustering(data.data.cpu().numpy(), y.cpu().numpy(), self.n_clusters, dc)
+        data, y, y_pred, _, cluster_centers_pos, _, _, outliers = density_peak_clustering(data.data.cpu().numpy(),
+                                                                                          y.cpu().numpy(),
+                                                                                          self.n_clusters, dc)
         # data, y, y_pred, _, cluster_centers_pos, _, _, outliers = knn_dpc(data.data.cpu().numpy(), y.cpu().numpy(), 50, self.n_clusters)
         X = X[~outliers]
         print(X.shape)
         y_pred_last = y_pred
         self.mu.data.copy_(torch.Tensor(cluster_centers_pos))
-
 
         if y is not None:
             # y = y.cpu().numpy()
@@ -164,9 +183,10 @@ class DEC(nn.Module):
                 pbatch = p[batch_idx * batch_size: min((batch_idx + 1) * batch_size, num)]
 
                 optimizer.zero_grad()
-                inputs = Variable(xbatch)
-                target = Variable(pbatch)
-
+                # inputs = Variable(xbatch)
+                # target = Variable(pbatch)
+                inputs = xbatch
+                target = pbatch
                 z, qbatch = self.forward(inputs)
                 loss = self.loss_function(target, qbatch)
                 train_loss += loss.data * len(inputs)
