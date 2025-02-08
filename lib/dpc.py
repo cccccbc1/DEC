@@ -25,8 +25,6 @@ def density_peak_clustering(data, y, num_centers, dc):
         delta[sorted_rho_idx[i]] = np.min(distances[sorted_rho_idx[i], sorted_rho_idx[:i]])
         nneigh[sorted_rho_idx[i]] = sorted_rho_idx[np.argmin(distances[sorted_rho_idx[i], sorted_rho_idx[:i]])]
 
-    # delta大但是rho小的点定义为噪声 去除噪声点
-
     # 步骤3：选择聚类中心
     delta_rho = delta * rho
     cluster_centers_idx = np.argsort(-delta_rho)[:num_centers]
@@ -36,8 +34,8 @@ def density_peak_clustering(data, y, num_centers, dc):
     cluster_centers_pos = data[cluster_centers_idx]
 
     # 判定离群点，假设rho < 阈值 或 delta > 阈值为离群点
-    rho_threshold = np.percentile(rho, 5)  # 局部密度阈值（取前5%的点作为离群点）
-    delta_threshold = np.percentile(delta, 95)  # 相对密度阈值（取后5%的点作为离群点）
+    rho_threshold = np.percentile(rho, 10)  # 局部密度阈值（取前5%的点作为离群点）
+    delta_threshold = np.percentile(delta, 90)  # 相对密度阈值（取后5%的点作为离群点）
     outliers = (rho < rho_threshold) & (delta > delta_threshold)
     filtered_data = data[~outliers]
     filtered_labels = y[~outliers]
@@ -49,7 +47,8 @@ def density_peak_clustering(data, y, num_centers, dc):
     #     if not cluster_centers[i]:
     #         clusters[i] = clusters[nneigh[i]]
     # 使用 KMeans 分配剩余点
-    kmeans = KMeans(n_clusters=num_centers, init=cluster_centers_pos, n_init=1)
+    # kmeans = KMeans(n_clusters=num_centers, init=cluster_centers_pos)
+    kmeans = KMeans(num_centers, n_init=20)
     kmeans.fit(data)
     clusters = kmeans.labels_
     cluster_centers = kmeans.cluster_centers_
@@ -59,8 +58,7 @@ def density_peak_clustering(data, y, num_centers, dc):
     return filtered_data, filtered_labels, clusters, cluster_centers_idx, cluster_centers, rho, delta, outliers
 
 
-# 示例使用
-# 示例数据
+# 示例
 '''
 # X = np.loadtxt('../dataset/Sprial.txt')
 X, y = make_blobs(n_samples=300, centers=5, random_state=42)

@@ -1,11 +1,8 @@
 import sys
 sys.path.append("..")
-import torch
 import torch.utils.data
-from torchvision import datasets, transforms
-import numpy as np
 import argparse
-from lib.stackedDAE import StackedDAE
+from dec_pytorch.train_model.stackedDAE import StackedDAE
 from lib.datasets import MNIST
 
 if __name__ == "__main__":

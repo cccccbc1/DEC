@@ -44,15 +44,27 @@ class Dataset(data.Dataset):
     def __len__(self):
         return len(self.data)
 
+# def masking_noise(data, frac):
+#     """
+#     data: Tensor
+#     frac: fraction of unit to be masked out
+#     """
+#     if not hasattr(masking_noise, 'noise_buffer') or masking_noise.noise_buffer.size() != data.size():
+#         masking_noise.noise_buffer = torch.empty_like(data, device=data.device)
+#     data_noise = data.clone()
+#     rand = torch.rand(data.size())
+#     data_noise[rand<frac] = 0
+#     return data_noise
+
 def masking_noise(data, frac):
-    """
-    data: Tensor
-    frac: fraction of unit to be masked out
-    """
+    if not hasattr(masking_noise, 'noise_buffer') or masking_noise.noise_buffer.size() != data.size():
+        masking_noise.noise_buffer = torch.empty_like(data, device=data.device)
+    rand = torch.rand_like(data)
+    mask = rand < frac
     data_noise = data.clone()
-    rand = torch.rand(data.size())
-    data_noise[rand<frac] = 0
+    data_noise[mask] = 0
     return data_noise
+
 
 def acc(y_true, y_pred):
     """

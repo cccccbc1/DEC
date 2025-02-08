@@ -1,21 +1,19 @@
-import torch
 import torch.utils.data
-from torchvision import datasets, transforms
-import numpy as np
-import argparse
-from lib.stackedDAE import StackedDAE
+from dec_pytorch.train_model.stackedDAE import StackedDAE
 from lib.dec import DEC
 from lib.datasets import MNIST
+# from lib.dec_optimize import DEC
 
+# 预训练
 dataset = "mnist"
-repeat = 1
+repeat = 5
 batch_size = 256
 
-for i in range(1, repeat+1):
+for i in range(4, 3 + repeat):
     print("Experiment #%d" % i)
 
     train_loader = torch.utils.data.DataLoader(
-        MNIST('./dataset/mnist', train=True, download=True),
+        MNIST('./dataset/mnist', train=True, download=False),
         batch_size=batch_size, shuffle=True, num_workers=0)
     test_loader = torch.utils.data.DataLoader(
         MNIST('./dataset/mnist', train=False),
@@ -32,7 +30,7 @@ for i in range(1, repeat+1):
     sdae.save_model(sdae_savepath)
 
     # finetune
-    mnist_train = MNIST('./dataset/mnist', train=True, download=True)
+    mnist_train = MNIST('./dataset/mnist', train=True, download=False)
     mnist_test = MNIST('./dataset/mnist', train=False)
     X = mnist_train.train_data
     y = mnist_train.train_labels

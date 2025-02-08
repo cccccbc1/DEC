@@ -9,11 +9,10 @@ from torch.autograd import Variable
 
 import numpy as np
 import math
-from lib.utils import acc
+from dec_pytorch.lib.utils import acc
 from sklearn.metrics.cluster import normalized_mutual_info_score
 from sklearn.cluster import KMeans
 
-from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA  # 用于降维
 from sklearn.manifold import TSNE  # 用于降维
@@ -114,7 +113,7 @@ class DEC(nn.Module):
         optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.parameters()), lr=lr, momentum=0.9)
 
         print("Initializing cluster centers with kmeans.")
-        # kmeans聚类  改这里
+        # kmeans
         kmeans = KMeans(self.n_clusters, n_init=20)
         data, _ = self.forward(X)
         y_pred = kmeans.fit_predict(data.data.cpu().numpy())
@@ -141,10 +140,10 @@ class DEC(nn.Module):
                 # check stop criterion
                 delta_label = np.sum(y_pred != y_pred_last).astype(np.float32) / num
                 y_pred_last = y_pred
-                if epoch > 0 and delta_label < tol:
-                    print('delta_label ', delta_label, '< tol ', tol)
-                    print("Reach tolerance threshold. Stopping training.")
-                    break
+                # if epoch > 0 and delta_label < tol:
+                #     print('delta_label ', delta_label, '< tol ', tol)
+                #     print("Reach tolerance threshold. Stopping training.")
+                #     break
 
             # train 1 epoch
             train_loss = 0.0

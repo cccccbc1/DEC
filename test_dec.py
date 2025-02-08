@@ -17,9 +17,9 @@ if __name__ == "__main__":
                         help='input batch size for training (default: 128)')
     parser.add_argument('--update-interval', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--pretrain', type=str, default="", metavar='N',
+    parser.add_argument('--pretrain', type=str, default="./DEC85/sdae-run-1.pt", metavar='N',
                     help='number of epochs to train (default: 10)')
     args = parser.parse_args()
 

@@ -1,11 +1,8 @@
 import sys
 sys.path.append("..")
-import torch
 import torch.utils.data
-from torchvision import datasets, transforms
-import numpy as np
 import argparse
-from lib.stackedDAE import StackedDAE
+from dec_pytorch.train_model.stackedDAE import StackedDAE
 from lib.datasets import MNIST
 
 if __name__ == "__main__":
@@ -14,9 +11,9 @@ if __name__ == "__main__":
                         help='learning rate for training (default: 0.001)')
     parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--pretrainepochs', type=int, default=10, metavar='N',
+    parser.add_argument('--pretrainepochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of epochs to train (default: 10)')
     args = parser.parse_args()
     
@@ -36,5 +33,5 @@ if __name__ == "__main__":
     print(sdae)
     sdae.pretrain(train_loader, test_loader, lr=args.lr, batch_size=args.batch_size, 
         num_epochs=args.pretrainepochs, corrupt=0.2, loss_type="mse")
-    sdae.fit(train_loader, test_loader, lr=args.lr, num_epochs=args.epochs, corrupt=0.2, loss_type="mse")
-    sdae.save_model("model/sdae.pt")
+    sdae.fit(train_loader, test_loader, lr=0.01, num_epochs=args.epochs, corrupt=0.2, loss_type="mse")
+    sdae.save_model("./model/sdae.pt")
