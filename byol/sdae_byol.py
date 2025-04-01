@@ -336,7 +336,7 @@ class StackedDAE(nn.Module):
                   f"Total Loss={avg_loss:.4f}, Recon={avg_recon:.4f}, Contrast={avg_contrast:.4f}")
 
             # 保存模型
-            if save_path and (epoch + 1) % 100 == 0:  # 每 100 个 epoch 保存一次
+            if (epoch + 1) % 500 == 0:  # 每 100 个 epoch 保存一次
                 self.save_model(f"{save_path}_epoch{epoch + 1}.pt")
                 print(f"Model saved to {save_path}_epoch{epoch + 1}.pt")
 

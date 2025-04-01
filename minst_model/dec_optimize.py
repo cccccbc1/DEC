@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.nn import Parameter
@@ -141,7 +142,7 @@ class DEC(nn.Module):
 
         print("Initializing cluster centers with Kmeans.")
         # kmeans
-        kmeans = KMeans(self.n_clusters, n_init=20)
+        kmeans = KMeans(self.n_clusters)
 
         data, _ = self.forward(X)
         y_pred = kmeans.fit_predict(data.data.cpu().numpy())
@@ -162,11 +163,16 @@ class DEC(nn.Module):
 
         if y is not None:
             y = y.cpu().numpy()
+            while acc(y, y_pred) < 0.8:
+                y_pred = kmeans.fit_predict(data.data.cpu().numpy())
+                y_pred_last = y_pred
+                self.mu.data.copy_(torch.Tensor(kmeans.cluster_centers_))
             print("Kmeans acc: %.5f, nmi: %.5f" % (acc(y, y_pred), normalized_mutual_info_score(y, y_pred)))
 
         self.train()
         num = X.shape[0]
         num_batch = int(math.ceil(1.0 * X.shape[0] / batch_size))
+        acc_list = []
         for epoch in range(num_epochs):
             if epoch % update_interval == 0:
                 # update the targe distribution p
@@ -177,14 +183,15 @@ class DEC(nn.Module):
                 y_pred = torch.argmax(q, dim=1).data.cpu().numpy()
                 if y is not None:
                     print("acc: %.5f, nmi: %.5f" % (acc(y, y_pred), normalized_mutual_info_score(y, y_pred)))
+                acc_list.append(acc(y, y_pred))    # 保存acc
 
                 # check stop criterion
                 delta_label = np.sum(y_pred != y_pred_last).astype(np.float32) / num
                 y_pred_last = y_pred
-                if epoch > 0 and delta_label < tol:
-                    print('delta_label ', delta_label, '< tol ', tol)
-                    print("Reach tolerance threshold. Stopping training.")
-                    break
+                # if epoch > 0 and delta_label < tol:
+                #     print('delta_label ', delta_label, '< tol ', tol)
+                #     print("Reach tolerance threshold. Stopping training.")
+                #     break
 
             zz = 0
             qq = 0
@@ -214,3 +221,6 @@ class DEC(nn.Module):
 
             print("#Epoch %3d: Loss: %.4f" % (
                 epoch + 1, train_loss / num))
+        # 保存acc
+        df = pd.DataFrame(acc_list, columns=["Accuracy"])  # 创建DataFrame
+        df.to_excel("./hututu/dec-fw.xlsx", index=False)

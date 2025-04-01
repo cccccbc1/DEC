@@ -46,5 +46,5 @@ torch.save(model.state_dict(), pretrain_save_path)
 # # 加载预训练的权重
 # pretrain_load_path = "stacked_dae_pretrained.pth"
 # model.load_state_dict(torch.load(pretrain_save_path, map_location=device))
-model.fit(train_loader, test_loader, lr=0.05, num_epochs=10000, corrupt=0.2, alpha=0.05, save_path="./train_model/model")
+model.fit(train_loader, test_loader, lr=0.05, num_epochs=10000, corrupt=0.2, alpha=0.001, save_path="./pre_0.001/model")
 

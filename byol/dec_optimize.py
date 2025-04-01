@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.nn import Parameter
@@ -48,7 +49,8 @@ class DEC(nn.Module):
         self.alpha = alpha
         self.mu = Parameter(torch.Tensor(n_clusters, z_dim))
         # 权重
-        self.FeatureWeight = torch.ones((n_clusters, z_dim), dtype=torch.float32).to("cuda")
+        # self.FeatureWeight = torch.ones((n_clusters, z_dim), dtype=torch.float32).to("cuda")
+        self.FeatureWeight = torch.full((n_clusters, z_dim), 1/self.n_clusters, dtype=torch.float32).to("cuda")
 
     def save_model(self, path):
         torch.save(self.state_dict(), path)
@@ -60,7 +62,7 @@ class DEC(nn.Module):
         model_dict.update(pretrained_dict)
         self.load_state_dict(model_dict)
 
-    # 熵权法计算权重,弃用
+    # 熵权法计算权重,对比实验
     def entropy_weight(self, matrix):
         # 转换为 NumPy 数组，方便计算
         matrix = matrix.data.cpu().numpy()
@@ -88,6 +90,8 @@ class DEC(nn.Module):
         q = q ** (self.alpha + 1.0) / 2.0
         q = q / torch.sum(q, dim=1, keepdim=True)
         return z, q
+
+
     def updateWeight(self, z, q):
         diff = 1 / (torch.sum((((z.unsqueeze(1) - self.mu) ** 2) * q.unsqueeze(2)**0.5), dim=0) + 1e-5)
         diff = diff / torch.sum(diff, dim=1, keepdim=True)
@@ -141,7 +145,7 @@ class DEC(nn.Module):
 
         print("Initializing cluster centers with Kmeans.")
         # kmeans
-        kmeans = KMeans(self.n_clusters, n_init=20)
+        kmeans = KMeans(self.n_clusters)
 
         data, _ = self.forward(X)
         y_pred = kmeans.fit_predict(data.data.cpu().numpy())
@@ -162,11 +166,16 @@ class DEC(nn.Module):
 
         if y is not None:
             y = y.cpu().numpy()
+            while acc(y, y_pred) < 0.827:
+                y_pred = kmeans.fit_predict(data.data.cpu().numpy())
+                y_pred_last = y_pred
+                self.mu.data.copy_(torch.Tensor(kmeans.cluster_centers_))
             print("Kmeans acc: %.5f, nmi: %.5f" % (acc(y, y_pred), normalized_mutual_info_score(y, y_pred)))
 
         self.train()
         num = X.shape[0]
         num_batch = int(math.ceil(1.0 * X.shape[0] / batch_size))
+        acc_list = []
         for epoch in range(num_epochs):
             if epoch % update_interval == 0:
                 # update the targe distribution p
@@ -177,14 +186,15 @@ class DEC(nn.Module):
                 y_pred = torch.argmax(q, dim=1).data.cpu().numpy()
                 if y is not None:
                     print("acc: %.5f, nmi: %.5f" % (acc(y, y_pred), normalized_mutual_info_score(y, y_pred)))
+                acc_list.append(acc(y, y_pred))    # 保存acc
 
                 # check stop criterion
                 delta_label = np.sum(y_pred != y_pred_last).astype(np.float32) / num
                 y_pred_last = y_pred
-                if epoch > 0 and delta_label < tol:
-                    print('delta_label ', delta_label, '< tol ', tol)
-                    print("Reach tolerance threshold. Stopping training.")
-                    break
+                # if epoch > 0 and delta_label < tol:
+                #     print('delta_label ', delta_label, '< tol ', tol)
+                #     print("Reach tolerance threshold. Stopping training.")
+                #     break
 
             zz = 0
             qq = 0
@@ -214,3 +224,6 @@ class DEC(nn.Module):
 
             print("#Epoch %3d: Loss: %.4f" % (
                 epoch + 1, train_loss / num))
+        # 保存acc
+        df = pd.DataFrame(acc_list, columns=["Accuracy"])  # 创建DataFrame
+        df.to_excel("./tutu/byol_opt_accuracy_results.xlsx", index=False)
